@@ -1,6 +1,6 @@
 # Algorithm puzzles
 
-** Google foobar version 53-11-g5ac0021-beta (2016-11-28-19:30+0000)
+## Google foobar version 53-11-g5ac0021-beta (2016-11-28-19:30+0000)
 
 I got a chanellenge from Google foobar when I searched Python related question on Google.
 
