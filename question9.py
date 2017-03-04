@@ -1,8 +1,4 @@
-from math import pow
 from time import time
-from collections import defaultdict
-
-cache = {}
 
 def answer(g):
     """
@@ -10,6 +6,7 @@ def answer(g):
     rows = len(g)
     cols = len(g[0])
     
+    # implemented wrong direction, so cheat here
     # transpose...
     new_g = [[0 for _ in range(rows)] for _ in range(cols)]
     for i in range(rows):
@@ -18,11 +15,12 @@ def answer(g):
     g = new_g
     rows, cols = cols, rows
     
-    # start running
+    # run through all position
     state = { 0 : { 0 : 1 } }
     for i in range(rows):
         for j in range(cols):
             state = find_answer(state, g, i, j)
+    # collect counts
     total = 0
     for _, state in state.items():
         for _, count in state.items():
@@ -32,6 +30,8 @@ def answer(g):
 def find_answer(state, g, i, j):
     """
     """
+    # state size = graph width of previous 
+    #              step + 1 overlapping
     size = len(g[0]) + 2
     possible_fill_ins = {
         False : [
@@ -58,6 +58,7 @@ def find_answer(state, g, i, j):
 
     nxt_state = {}
     for fill in possible_fill_ins[g[i][j]]:
+        # compose key
         if i == 0 and j == 0:
             key = 0
         elif i == 0:
@@ -67,7 +68,9 @@ def find_answer(state, g, i, j):
         else:
             key = (fill[1][0] << 2) + (fill[0][0] << 1) + (fill[0][1])
 
+        # run through all available states
         for prev, count in state.get(key, {}).items():
+            # compose new state
             part = (fill[1][0] << 2) + (fill[1][1] << 1) + (fill[0][1])
             prev = prev & ~(7 << (size - j - 3))
             new_state = (part << (size - j - 3)) | prev
@@ -75,10 +78,12 @@ def find_answer(state, g, i, j):
             if j == (len(g[0]) - 1):
                 new_state >>= 1
 
+            # compose new key
             nxt_j = 0 if (j == len(g[0])-1) else j+1
             nxt_j = size - nxt_j - 3
             new_key = (new_state >> nxt_j) & 7
 
+            # store new states in nxt_state
             nxt_state[new_key] = nxt_state.get(new_key, {})
             nxt_state[new_key][new_state] = nxt_state[new_key].get(new_state, 0)
             nxt_state[new_key][new_state] += count
@@ -86,7 +91,6 @@ def find_answer(state, g, i, j):
     return nxt_state
     
     
-
 def print_state(state):
 
     for k,v in state.items():
@@ -94,118 +98,7 @@ def print_state(state):
         for s, c in v.items():
             print('   {0:08b}: {1}'.format(s, c))
 
-def answer_slow(g):
-    global cache
-    cache = {}
-    ######
-    rows = len(g)
-    cols = len(g[0])
-    check = [[None for _ in range(cols + 1)] for _ in range(rows + 1)]
-    t1 = time()
-    count = find_answer_slow(check, g, 0, 0)
-    print('Run time: {}'.format(time()-t1))
-    return count
-    print('Result1: {}.'.format(count))
 
-
-    ######
-    #t1 = time()
-    #count = 0
-    #rows = len(g) + 1
-    #cols = len(g[0]) + 1
-
-    #for val in range(int(pow(2, rows*cols))):
-    #    state = [[0 for _ in range(cols)] for _ in range(rows)]
-    #    for i in range(rows):
-    #        for j in range(cols):
-    #            state[i][j] = (val >> (i*cols + j)) % 2 == 1
-
-    #    nxt = next_state(state)
-    #    if nxt == g:
-    #        state = [[1 if state[i][j] else 0 for j in range(cols)] for i in range(rows)]
-    #        #print(state)
-    #        count += 1
-    #print(time()-t1)
-    #print('Result2: {}.'.format(count))
-
-
-def find_answer_slow(state, g, i, j):
-
-    if i == len(g):
-        return 1
-
-    global cache
-    key = None
-
-
-    nxt_j = j + 1 if (j+1) < len(g[0]) else 0
-    nxt_i = i + 1 if nxt_j == 0 else i
-
-    possible_fill_ins = {
-        False : [
-            [[1, 1], [0, 0]],
-            [[1, 0], [1, 0]],
-            [[1, 0], [0, 1]],
-            [[0, 1], [1, 0]],
-            [[0, 1], [0, 1]],
-            [[0, 0], [1, 1]],
-            [[1, 1], [1, 0]],
-            [[1, 1], [0, 1]],
-            [[1, 0], [1, 1]],
-            [[0, 1], [1, 1]],
-            [[1, 1], [1, 1]],
-            [[0, 0], [0, 0]],
-        ],
-        True : [
-            [[0, 0], [0, 1]],
-            [[0, 0], [1, 0]],
-            [[0, 1], [0, 0]],
-            [[1, 0], [0, 0]],
-        ]
-    }
-
-    count = 0
-    for fill in possible_fill_ins[g[i][j]]:
-        if i == 0 and j == 0:
-            state[i][j]   = fill[0][0]
-
-        if i == 0:
-            state[i][j+1] = fill[0][1]
-
-        if j == 0:
-            state[i+1][j] = fill[1][0]
-
-        if state[i][j] != fill[0][0] or \
-           state[i][j+1] != fill[0][1] or \
-           state[i+1][j] != fill[1][0]:
-            continue
-
-        state[i+1][j+1] = fill[1][1]
-
-        key = ''
-        for idx in range(len(state[0])):
-            if idx <= j:
-                key += str(state[i+1][idx])
-            else:
-                key += str(state[i][idx])
-        key = (key, i, j, fill[1][1])
-        if key in cache:
-            cnt = cache[key]
-        else:
-            cnt = find_answer_slow(state, g, nxt_i, nxt_j)
-            cache[key] = cnt
-        count += cnt
-    return count
-
-def next_state(state):
-    rows = len(state) - 1
-    cols = len(state[0]) - 1
-    nxt = [[False for _ in range(cols)] for _ in range(rows)]
-
-    for i in range(rows):
-        for j in range(cols):
-            nxt[i][j] = (state[i][j] + state[i+1][j] + state[i][j+1] + state[i+1][j+1]) == 1
-    return nxt
 
 g = [
     [True, False, True],
