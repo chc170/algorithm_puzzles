@@ -5,32 +5,33 @@ from collections import defaultdict
 cache = {}
 
 def answer(g):
-
+    """
+    """
     rows = len(g)
     cols = len(g[0])
-    state = { 0 : { 0 : 1} }
-
-    t1 = time()
+    
+    # transpose...
+    new_g = [[0 for _ in range(rows)] for _ in range(cols)]
+    for i in range(rows):
+        for j in range(cols):
+            new_g[j][i] = g[i][j]
+    g = new_g
+    rows, cols = cols, rows
+    
+    # start running
+    state = { 0 : { 0 : 1 } }
     for i in range(rows):
         for j in range(cols):
             state = find_answer(state, g, i, j)
-            n_states = 0
-            for _, val in state.items():
-                n_states += len(val)
-            output = '# of keys: {}. # of states: {}'.format(len(state),
-                                                             n_states)
-            #print(output)
-
-    print('Run time: {}'.format(time()-t1))
-    #print(state)
     total = 0
     for _, state in state.items():
         for _, count in state.items():
             total += count
     return total
-
+    
 def find_answer(state, g, i, j):
-
+    """
+    """
     size = len(g[0]) + 2
     possible_fill_ins = {
         False : [
@@ -54,51 +55,37 @@ def find_answer(state, g, i, j):
             [[1, 0], [0, 0]],
         ]
     }
-    #print(state)
+
     nxt_state = {}
-    #import ipdb; ipdb.set_trace()
     for fill in possible_fill_ins[g[i][j]]:
         if i == 0 and j == 0:
             key = 0
         elif i == 0:
-            #key = str(fill[1][0]) + str(fill[0][0]) + 'x'
             key = (fill[1][0] << 2) + (fill[0][0] << 1)
         elif j == 0:
             key = (fill[0][0] << 1) + (fill[0][1])
-            #key = 'x' + str(fill[0][0]) + str(fill[0][1])
         else:
             key = (fill[1][0] << 2) + (fill[0][0] << 1) + (fill[0][1])
-            #key = str(fill[1][0]) + str(fill[0][0]) + str(fill[0][1])
 
         for prev, count in state.get(key, {}).items():
             part = (fill[1][0] << 2) + (fill[1][1] << 1) + (fill[0][1])
-            #print(fill)
-            #print(' part: {0:03b}'.format(part))
-            #print('opart: {}'.format(str(fill[1][0]) + str(fill[1][1]) +
-            #                         str(fill[0][1])))
-            #print('pre_state: {0:06b}'.format(prev))
             prev = prev & ~(7 << (size - j - 3))
             new_state = (part << (size - j - 3)) | prev
-            #print('new_state: {0:06b}'.format(new_state))
-            #part = str(fill[1][0]) + str(fill[1][1]) + str(fill[0][1])
-            #new_state = prev[:j] + part + prev[j+3:]
+
             if j == (len(g[0]) - 1):
                 new_state >>= 1
-                #new_state = 'x' + new_state[:-1]
-
-            #print('new_state2: {0:06b}'.format(new_state))
 
             nxt_j = 0 if (j == len(g[0])-1) else j+1
             nxt_j = size - nxt_j - 3
             new_key = (new_state >> nxt_j) & 7
-            #new_key = new_state[nxt_j:nxt_j+3]
+
             nxt_state[new_key] = nxt_state.get(new_key, {})
             nxt_state[new_key][new_state] = nxt_state[new_key].get(new_state, 0)
             nxt_state[new_key][new_state] += count
 
-    #print_state(nxt_state)
-    #import ipdb; ipdb.set_trace()
     return nxt_state
+    
+    
 
 def print_state(state):
 
@@ -228,89 +215,50 @@ g = [
 
 print('9 Expected: 4.  Result: {}.'.format(answer(g)))
 
-g = [[True, False, True, False, False, True, True, True,],
-     [True, False, True, False, False, False, True, False],
-     [True, True, True, False, False, False, True, False],
-     [True, False, True, False, False, False, True, False],
-     [True, False, True, False, False, True, True, True]]
+g = [
+    [True, False, True, False, False, True, True, True,],
+    [True, False, True, False, False, False, True, False],
+    [True, True, True, False, False, False, True, False],
+    [True, False, True, False, False, False, True, False],
+    [True, False, True, False, False, True, True, True]
+]
 print('40 Expected: 254.   Result: {}.'.format(answer(g)))
 
 g = [
-[True, False, True, False, False, True, True, True, True, True, True, False],
-[True, False, True, False, False, True, True, True, True, True, True, False],
-[True, False, True, False, False, True, True, True, True, True, True, False],
-[True, False, True, False, False, True, True, True, True, True, True, False],
-[True, False, True, False, False, True, True, True, True, True, True, False],
-[True, False, True, False, False, True, True, True, True, True, True, False],
-[True, False, True, False, False, True, True, True, True, True, True, False],
-[True, False, True, False, False, True, True, True, True, True, True, False],
-[True, False, True, False, False, True, True, True, True, True, True, False],
+    [True, False, True, False, False, True, True, True, True, True, True, False],
+    [True, False, True, False, False, True, True, True, True, True, True, False],
+    [True, False, True, False, False, True, True, True, True, True, True, False],
+    [True, False, True, False, False, True, True, True, True, True, True, False],
+    [True, False, True, False, False, True, True, True, True, True, True, False],
+    [True, False, True, False, False, True, True, True, True, True, True, False],
+    [True, False, True, False, False, True, True, True, True, True, True, False],
+    [True, False, True, False, False, True, True, True, True, True, True, False],
+    [True, False, True, False, False, True, True, True, True, True, True, False],
 ]
 print('108 Expected: ?.   Result: {}.'.format(answer(g)))
 
 g = [
-[True, False, True, False, False, True, True, True, True, True, True, False, True, False, True, False, False, True, True, True, True, True, True, False],
-[True, False, True, False, False, True, True, True, True, True, True, False, True, False, True, False, False, True, True, True, True, True, True, False],
-[True, False, True, False, False, True, True, True, True, True, True, False, True, False, True, False, False, True, True, True, True, True, True, False],
-[True, False, True, False, False, True, True, True, True, True, True, False, True, False, True, False, False, True, True, True, True, True, True, False],
-[True, False, True, False, False, True, True, True, True, True, True, False, True, False, True, False, False, True, True, True, True, True, True, False],
-[True, False, True, False, False, True, True, True, True, True, True, False, True, False, True, False, False, True, True, True, True, True, True, False],
-[True, False, True, False, False, True, True, True, True, True, True, False, True, False, True, False, False, True, True, True, True, True, True, False],
-[True, False, True, False, False, True, True, True, True, True, True, False, True, False, True, False, False, True, True, True, True, True, True, False],
-[True, False, True, False, False, True, True, True, True, True, True, False, True, False, True, False, False, True, True, True, True, True, True, False],
+    [True, False, True, False, False, True, True, True, True, True, True, False, True, False, True, False, False, True, True, True, True, True, True, False],
+    [True, False, True, False, False, True, True, True, True, True, True, False, True, False, True, False, False, True, True, True, True, True, True, False],
+    [True, False, True, False, False, True, True, True, True, True, True, False, True, False, True, False, False, True, True, True, True, True, True, False],
+    [True, False, True, False, False, True, True, True, True, True, True, False, True, False, True, False, False, True, True, True, True, True, True, False],
+    [True, False, True, False, False, True, True, True, True, True, True, False, True, False, True, False, False, True, True, True, True, True, True, False],
+    [True, False, True, False, False, True, True, True, True, True, True, False, True, False, True, False, False, True, True, True, True, True, True, False],
+    [True, False, True, False, False, True, True, True, True, True, True, False, True, False, True, False, False, True, True, True, True, True, True, False],
+    [True, False, True, False, False, True, True, True, True, True, True, False, True, False, True, False, False, True, True, True, True, True, True, False],
+    [True, False, True, False, False, True, True, True, True, True, True, False, True, False, True, False, False, True, True, True, True, True, True, False],
 ]
-#print('216 Expected: ?.   Result: {}.'.format(answer(g)))
+print('216 Expected: ?.   Result: {}.'.format(answer(g)))
 
 g = [
-    [True, False, True, False, True, False, True, False, True],
-    [False, True, False, True, False, True, False, True, False],
-    [True, False, True, False, True, False, True, False, True],
-    [False, True, False, True, False, True, False, True, False],
-    [True, False, True, False, True, False, True, False, True],
-    [False, True, False, True, False, True, False, True, False],
-    [True, False, True, False, True, False, True, False, True],
-    [False, True, False, True, False, True, False, True, False],
-    [True, False, True, False, True, False, True, False, True],
-    [False, True, False, True, False, True, False, True, False],
-    [True, False, True, False, True, False, True, False, True],
-    [False, True, False, True, False, True, False, True, False],
-    [True, False, True, False, True, False, True, False, True],
-    [False, True, False, True, False, True, False, True, False],
-    [True, False, True, False, True, False, True, False, True],
-    [False, True, False, True, False, True, False, True, False],
-    [True, False, True, False, True, False, True, False, True],
-    [False, True, False, True, False, True, False, True, False],
-    [True, False, True, False, True, False, True, False, True],
-    [False, True, False, True, False, True, False, True, False],
-    [True, False, True, False, True, False, True, False, True],
-    [False, True, False, True, False, True, False, True, False],
-    [True, False, True, False, True, False, True, False, True],
-    [False, True, False, True, False, True, False, True, False],
-    [True, False, True, False, True, False, True, False, True],
-    [False, True, False, True, False, True, False, True, False],
-    [True, False, True, False, True, False, True, False, True],
-    [False, True, False, True, False, True, False, True, False],
-    [True, False, True, False, True, False, True, False, True],
-    [False, True, False, True, False, True, False, True, False],
-    [True, False, True, False, True, False, True, False, True],
-    [False, True, False, True, False, True, False, True, False],
-    [True, False, True, False, True, False, True, False, True],
-    [False, True, False, True, False, True, False, True, False],
-    [True, False, True, False, True, False, True, False, True],
-    [False, True, False, True, False, True, False, True, False],
-    [True, False, True, False, True, False, True, False, True],
-    [False, True, False, True, False, True, False, True, False],
-    [True, False, True, False, True, False, True, False, True],
-    [False, True, False, True, False, True, False, True, False],
-    [True, False, True, False, True, False, True, False, True],
-    [False, True, False, True, False, True, False, True, False],
-    [True, False, True, False, True, False, True, False, True],
-    [False, True, False, True, False, True, False, True, False],
-    [True, False, True, False, True, False, True, False, True],
-    [False, True, False, True, False, True, False, True, False],
-    [True, False, True, False, True, False, True, False, True],
-    [False, True, False, True, False, True, False, True, False],
-    [True, False, True, False, True, False, True, False, True],
-    [False, True, False, True, False, True, False, True, False],
+    [True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False],
+    [False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True],
+    [True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False],
+    [False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True],
+    [True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False],
+    [False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True],
+    [True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False],
+    [False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True],
+    [True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False],
 ]
 print('450 Expected: ?.   Result: {}.'.format(answer(g)))
